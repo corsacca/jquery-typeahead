@@ -1,10 +1,10 @@
 /*!
  * jQuery Typeahead
- * Copyright (C) 2017 RunningCoder.org
+ * Copyright (C) 2018 RunningCoder.org
  * Licensed under the MIT license
  *
  * @author Tom Bertrand
- * @version 2.10.4 (2017-11-22)
+ * @version 2.10.4 (2018-1-17)
  * @link http://www.runningcoder.org/jquerytypeahead/
  */
 (function (factory) {
@@ -3191,13 +3191,15 @@
                 numberOfRows * labelOuterHeight +
                 parseFloat(this.label.container.data("padding-top") || 0);
 
+            var dir = $('body').css('direction');
+            var css = {};
+            css[dir === "rtl" ? "paddingRight" : "paddingLeft"] = paddingLeft;
+            css.paddingTop = paddingTop;
+
             this.container
                 .find("." + this.options.selector.query)
                 .find("input, textarea, [contenteditable], .typeahead__hint")
-                .css({
-                    paddingLeft: paddingLeft,
-                    paddingTop: paddingTop
-                });
+                .css(css);
         },
 
         showLayout: function () {
