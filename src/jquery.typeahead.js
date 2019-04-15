@@ -1,10 +1,10 @@
 /*!
  * jQuery Typeahead
- * Copyright (C) 2018 RunningCoder.org
+ * Copyright (C) 2019 RunningCoder.org
  * Licensed under the MIT license
  *
  * @author Tom Bertrand
- * @version 2.10.4 (2018-1-17)
+ * @version 2.10.6 (2019-4-15)
  * @link http://www.runningcoder.org/jquerytypeahead/
  */
 (function (factory) {
@@ -30,7 +30,7 @@
     "use strict";
 
     window.Typeahead = {
-        version: '2.10.4'
+        version: '2.10.6'
     };
 
     /**
@@ -409,7 +409,6 @@
             }
 
             if (
-                this.options.maxItemPerGroup &&
                 this.options.group &&
                 this.options.group.key
             ) {
@@ -735,8 +734,9 @@
                                 scope.helper.executeCallback.call(
                                     scope,
                                     scope.options.callback.onCancel,
-                                    [scope.node, e]
+                                    [scope.node, scope.item, e]
                                 );
+                                scope.item = null;
                             }
 
                             scope.options.cancelButton &&
@@ -797,7 +797,6 @@
             this.rawQuery = this.rawQuery.replace(/^\s+/, "");
 
             if (this.rawQuery !== this.query) {
-                this.item = null;
                 this.query = this.rawQuery;
             }
         },
@@ -814,6 +813,14 @@
                     this.query.length >= this.options.source[group].minLength &&
                     this.query.length <= this.options.source[group].maxLength
                 ) {
+                    if (
+                        this.filters.dropdown &&
+                        this.filters.dropdown.key === 'group' &&
+                        this.filters.dropdown.value !== group
+                    ) {
+                        continue;
+                    }
+
                     this.searchGroups.push(group);
                     if (!this.options.source[group].dynamic && this.source[group]) {
                         continue;
@@ -1120,7 +1127,7 @@
                                 _group = xhrObject.validForGroup[i];
                                 _request = scope.requests[_group];
 
-                                if (_request.callback.done instanceof Function) {
+                                if (typeof _request.callback.done === 'function') {
                                     _groupData[_group] = _request.callback.done.call(
                                         scope,
                                         data,
@@ -1190,7 +1197,7 @@
                                 _request.callback.always.call(scope, data, textStatus, jqXHR);
 
                                 // #248, #303 Aborted requests would call populate with invalid data
-                                if (typeof jqXHR !== "object") return;
+                                if (textStatus === 'abort') return;
 
                                 // #265 Modified data from ajax.callback.done is not being registered (use of _groupData[_group])
                                 scope.populateSource(
@@ -1920,6 +1927,8 @@
                         }
 
                         if (~[undefined, true].indexOf(groupFilter)) {
+                            if (displayValue === null) continue;
+
                             comparedDisplay = displayValue;
                             comparedDisplay = comparedDisplay.toString().toLowerCase();
 
@@ -2418,10 +2427,6 @@
                             return;
                         }
 
-                        // if (scope.options.multiselect) {
-                        //     scope.items.push(item);
-                        //     scope.comparedItems.push(scope.getMultiselectComparedData(item));
-                        // } else {
                         if (!scope.options.multiselect) {
                             scope.item = item;
                         }
@@ -2456,6 +2461,9 @@
                         scope.node
                             .val(scope.query)
                             .focus();
+
+                        scope.options.cancelButton &&
+                            scope.toggleCancelButtonVisibility();
 
                         scope.helper.executeCallback.call(
                             scope,
@@ -2858,7 +2866,7 @@
                     .html(item.template);
 
                 this.isDropdownEvent = true;
-                this.node.trigger("search" + this.namespace);
+                this.node.trigger("input" + this.namespace);
 
                 if (this.options.multiselect) {
                     this.adjustInputSize();
@@ -3311,7 +3319,6 @@
             if (this.isContentEditable) {
                 this.node.text("");
             }
-            this.item = null;
             this.query = "";
             this.rawQuery = "";
         },
